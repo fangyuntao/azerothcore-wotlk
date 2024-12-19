@@ -908,7 +908,7 @@ bool SmartAIMgr::CheckUnusedTargetParams(SmartScriptHolder const& e)
             case SMART_TARGET_GAMEOBJECT_RANGE: return sizeof(SmartTarget::goRange);
             case SMART_TARGET_GAMEOBJECT_GUID: return sizeof(SmartTarget::goGUID);
             case SMART_TARGET_GAMEOBJECT_DISTANCE: return sizeof(SmartTarget::goDistance);
-            case SMART_TARGET_INVOKER_PARTY: return NO_PARAMS;
+            case SMART_TARGET_INVOKER_PARTY: return sizeof(SmartTarget::invokerParty);
             case SMART_TARGET_PLAYER_RANGE: return sizeof(SmartTarget::playerRange);
             case SMART_TARGET_PLAYER_DISTANCE: return sizeof(SmartTarget::playerDistance);
             case SMART_TARGET_CLOSEST_CREATURE: return sizeof(SmartTarget::unitClosest);
@@ -2015,6 +2015,7 @@ bool SmartAIMgr::IsEventValid(SmartScriptHolder& e)
         case SMART_ACTION_FLEE:
         case SMART_ACTION_ADD_THREAT:
         case SMART_ACTION_TRIGGER_RANDOM_TIMED_EVENT:
+        case SMART_ACTION_DISMOUNT:
         case SMART_ACTION_SET_HOVER:
         case SMART_ACTION_ADD_IMMUNITY:
         case SMART_ACTION_REMOVE_IMMUNITY:

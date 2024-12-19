@@ -107,8 +107,6 @@ WorldSession::WorldSession(uint32 id, std::string&& name, std::shared_ptr<WorldS
     time_t mute_time, LocaleConstant locale, uint32 recruiter, bool isARecruiter, bool skipQueue, uint32 TotalTime) :
     m_muteTime(mute_time),
     m_timeOutTime(0),
-    _lastAuctionListItemsMSTime(0),
-    _lastAuctionListOwnerItemsMSTime(0),
     AntiDOS(this),
     m_GUIDLow(0),
     _player(nullptr),
@@ -595,7 +593,7 @@ void WorldSession::LogoutPlayer(bool save)
             _player->BuildPlayerRepop();
             _player->RepopAtGraveyard();
         }
-        else if (_player->HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
+        else if (_player->HasSpiritOfRedemptionAura())
         {
             // this will kill character by SPELL_AURA_SPIRIT_OF_REDEMPTION
             _player->RemoveAurasByType(SPELL_AURA_MOD_SHAPESHIFT);
@@ -1019,7 +1017,7 @@ void WorldSession::ReadMovementInfo(WorldPacket& data, MovementInfo* mi)
         MOVEMENTFLAG_ROOT);
 
     //! Cannot hover without SPELL_AURA_HOVER
-    REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_HOVER) && !GetPlayer()->HasAuraType(SPELL_AURA_HOVER),
+    REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_HOVER) && !GetPlayer()->HasHoverAura(),
         MOVEMENTFLAG_HOVER);
 
     //! Cannot ascend and descend at the same time
@@ -1044,12 +1042,12 @@ void WorldSession::ReadMovementInfo(WorldPacket& data, MovementInfo* mi)
 
     //! Cannot walk on water without SPELL_AURA_WATER_WALK
     REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_WATERWALKING) &&
-        !GetPlayer()->HasAuraType(SPELL_AURA_WATER_WALK) &&
-        !GetPlayer()->HasAuraType(SPELL_AURA_GHOST),
+        !GetPlayer()->HasWaterWalkAura() &&
+        !GetPlayer()->HasGhostAura(),
         MOVEMENTFLAG_WATERWALKING);
 
     //! Cannot feather fall without SPELL_AURA_FEATHER_FALL
-    REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_FALLING_SLOW) && !GetPlayer()->HasAuraType(SPELL_AURA_FEATHER_FALL),
+    REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_FALLING_SLOW) && !GetPlayer()->HasFeatherFallAura(),
         MOVEMENTFLAG_FALLING_SLOW);
 
     /*! Cannot fly if no fly auras present. Exception is being a GM.
@@ -1058,7 +1056,7 @@ void WorldSession::ReadMovementInfo(WorldPacket& data, MovementInfo* mi)
         e.g. aerial combat.
     */
 
-    REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_FLYING | MOVEMENTFLAG_CAN_FLY) && GetSecurity() == SEC_PLAYER && !GetPlayer()->m_mover->HasAuraType(SPELL_AURA_FLY) && !GetPlayer()->m_mover->HasAuraType(SPELL_AURA_MOD_INCREASE_MOUNTED_FLIGHT_SPEED),
+    REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_FLYING | MOVEMENTFLAG_CAN_FLY) && GetSecurity() == SEC_PLAYER && !GetPlayer()->m_mover->HasFlyAura() && !GetPlayer()->m_mover->HasIncreaseMountedFlightSpeedAura(),
         MOVEMENTFLAG_FLYING | MOVEMENTFLAG_CAN_FLY);
 
     //! Cannot fly and fall at the same time
@@ -1537,6 +1535,9 @@ uint32 WorldSession::DosProtection::GetMaxPacketCounterAllowed(uint16 opcode) co
         case CMSG_SOCKET_GEMS:                          // not profiled
         case CMSG_WRAP_ITEM:                            // not profiled
         case CMSG_REPORT_PVP_AFK:                       // not profiled
+        case CMSG_AUCTION_LIST_ITEMS:                   // not profiled
+        case CMSG_AUCTION_LIST_BIDDER_ITEMS:            // not profiled
+        case CMSG_AUCTION_LIST_OWNER_ITEMS:             // not profiled
             {
                 maxPacketCounterAllowed = 10;
                 break;
